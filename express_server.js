@@ -9,6 +9,8 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+app.use(express.urlencoded({ extended: true }));
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -26,6 +28,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
@@ -33,6 +39,16 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+const generateRandomString = () => {
+  return Math.random().toString(36).substring(2, 8);
+};
+
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
+});
+
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
