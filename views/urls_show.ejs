@@ -8,13 +8,20 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
 </head>
 <body>
+  <%- include('partials/_header') %>
   <div class="card text-center">
     <div class="card-header">URL Details</div>
     <div class="card-body">
       <h5 class="card-title">TinyURL for: <%= longURL %></h5>
       <p class="card-text">Short URL ID: <a href="/u/<%= id %>"><%= id %></a></p>
+      <form method="POST" action="/urls/<%= id %>">
+        <div class="form-group">
+          <label for="longURL">Update Long URL:</label>
+          <input type="text" name="longURL" class="form-control" value="<%= longURL %>">
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+      </form>
     </div>
   </div>
 </body>
-    <%- include('partials/_header') %>
 </html>

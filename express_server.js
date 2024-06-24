@@ -67,6 +67,14 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
+// Route to handle updating of a URL
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const newLongURL = req.body.longURL;
+  urlDatabase[id] = newLongURL;
+  res.redirect("/urls");
+});
+
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
 });
