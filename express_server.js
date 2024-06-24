@@ -34,7 +34,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
-    username: req.cookies["username"] 
+    username: req.cookies["username"]
   };
   res.render("urls_index", templateVars);
 });
@@ -49,10 +49,10 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
-  const templateVars = {
+  const templateVars = { 
     id, 
     longURL, 
-    username: req.cookies["username"] 
+    username: req.cookies["username"]
   };
   res.render("urls_show", templateVars);
 });
@@ -101,6 +101,13 @@ app.post("/login", (req, res) => {
   res.cookie("username", username);
   res.redirect("/urls");
 });
+
+// Route to handle user logout
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls"); 
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
