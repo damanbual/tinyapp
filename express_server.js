@@ -60,6 +60,13 @@ app.get("/u/:id", (req, res) => {
   }
 });
 
+// Route to handle deletion of a URL
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls");
+});
+
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
 });
