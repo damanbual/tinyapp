@@ -1,7 +1,9 @@
 
-const express = require("express");
-const cookieSession = require("cookie-session");
-const bcrypt = require("bcryptjs");
+import express from "express";
+import cookieSession from "cookie-session";
+import bcrypt from "bcryptjs";
+import { getUserByEmail } from "./helpers/helpers.mjs"; // Updated path
+
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -40,16 +42,6 @@ const users = {
 
 const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
-};
-
-const getUserByEmail = (email, users) => {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
 };
 
 const urlsForUser = (id) => {
