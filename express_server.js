@@ -12,8 +12,42 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+// Global users object
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "a@a.com",
+    password: "1234",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "b@b.com",
+    password: "1234",
+  },
+};
+
 // Middleware to parse request bodies
 app.use(express.urlencoded({ extended: true }));
+
+// Function to generate a random short URL ID
+const generateRandomString = () => {
+  return Math.random().toString(36).substring(2, 8);
+};
+
+// Route to handle user registration
+app.post("/register", (req, res) => {
+  const { email, password } = req.body;
+  const userId = generateRandomString();
+
+  users[userId] = {
+    id: userId,
+    email,
+    password,
+  };
+
+  res.cookie("user_id", userId);
+  res.redirect("/urls");
+});
 
 // Route to render the homepage
 app.get("/", (req, res) => {
@@ -32,35 +66,33 @@ app.get("/hello", (req, res) => {
 
 // Route to display the list of URLs
 app.get("/urls", (req, res) => {
+  const user = users[req.cookies["user_id"]];
   const templateVars = { 
     urls: urlDatabase, 
-    username: req.cookies["username"]
+    user
   };
   res.render("urls_index", templateVars);
 });
 
 // Route to render the new URL submission form
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const user = users[req.cookies["user_id"]];
+  const templateVars = { user }; // Updated to pass user object
   res.render("urls_new", templateVars);
 });
 
 // Route to display a single URL and its shortened form
 app.get("/urls/:id", (req, res) => {
+  const user = users[req.cookies["user_id"]];
   const id = req.params.id;
   const longURL = urlDatabase[id];
   const templateVars = { 
     id, 
     longURL, 
-    username: req.cookies["username"]
+    user
   };
   res.render("urls_show", templateVars);
 });
-
-// Function to generate a random short URL ID
-const generateRandomString = () => {
-  return Math.random().toString(36).substring(2, 8);
-};
 
 // Route to handle form submission for creating a new shortened URL
 app.post("/urls", (req, res) => {
@@ -98,22 +130,24 @@ app.post("/urls/:id", (req, res) => {
 // Route to handle user login
 app.post("/login", (req, res) => {
   const username = req.body.username;
-  res.cookie("username", username);
+  res.cookie("user_id", username);
   res.redirect("/urls");
 });
 
 // Route to handle user logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  res.redirect("/urls"); 
+  res.clearCookie("user_id");
+  res.redirect("/urls");
 });
 
-// New route to render the registration form
+// NEW: Route to render the registration form
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies["username"] }; 
+  const user = users[req.cookies["user_id"]];
+  const templateVars = { user }; 
   res.render("register", templateVars);
 });
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
