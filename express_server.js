@@ -1,12 +1,18 @@
 
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
-app.use(cookieParser());
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['Kelowna3738', 'Surrey9583'],
+}));
+
+app.use(express.urlencoded({ extended: true }));
 
 const urlDatabase = {
   b6UTxQ: {
@@ -19,29 +25,23 @@ const urlDatabase = {
   },
 };
 
-// Global users object
 const users = {
   userRandomID: {
     id: "userRandomID",
     email: "a@a.com",
-    password: bcrypt.hashSync("purple-monkey-dinosaur", 10),
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10), // Example hashed password
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "b@b.com",
-    password: bcrypt.hashSync("dishwasher-funk", 10),
+    password: bcrypt.hashSync("dishwasher-funk", 10), // Example hashed password
   },
 };
 
-// Middleware to parse request bodies
-app.use(express.urlencoded({ extended: true }));
-
-// Function to generate a random short URL ID
 const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
 };
 
-// Helper function to find user by email
 const getUserByEmail = (email, users) => {
   for (const userId in users) {
     const user = users[userId];
@@ -52,7 +52,6 @@ const getUserByEmail = (email, users) => {
   return null;
 };
 
-// Helper function to get URLs for a specific user
 const urlsForUser = (id) => {
   const userUrls = {};
   for (const shortURL in urlDatabase) {
@@ -63,16 +62,14 @@ const urlsForUser = (id) => {
   return userUrls;
 };
 
-//  Route to handle user registration
+// Route to handle user registration
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
-  
-  // Check if email or password are empty
+
   if (!email || !password) {
     return res.status(400).send("Email and password cannot be empty");
   }
 
-  // Check if email already exists
   if (getUserByEmail(email, users)) {
     return res.status(400).send("Email already exists");
   }
@@ -86,8 +83,8 @@ app.post("/register", (req, res) => {
     password: hashedPassword,
   };
 
-  res.cookie("user_id", userId);
-  console.log(users); // debugging
+  req.session.user_id = userId;
+  console.log(users); // For debugging
   res.redirect("/urls");
 });
 
@@ -108,7 +105,7 @@ app.get("/hello", (req, res) => {
 
 // Route to display the list of URLs
 app.get("/urls", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (!user) {
     return res.status(403).send("You must be logged in to view URLs.");
   }
@@ -121,9 +118,9 @@ app.get("/urls", (req, res) => {
 
 // Route to render the new URL submission form
 app.get("/urls/new", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (!user) {
-    return res.redirect("/login"); // Redirect if user is not logged in
+    return res.redirect("/login");
   }
   const templateVars = { user };
   res.render("urls_new", templateVars);
@@ -131,7 +128,7 @@ app.get("/urls/new", (req, res) => {
 
 // Route to display a single URL and its shortened form
 app.get("/urls/:id", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = req.params.id;
   const url = urlDatabase[shortURL];
   if (!user) {
@@ -153,7 +150,7 @@ app.get("/urls/:id", (req, res) => {
 
 // Route to handle form submission for creating a new shortened URL
 app.post("/urls", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (!user) {
     return res.status(403).send("You must be logged in to create a short URL.");
   }
@@ -168,16 +165,16 @@ app.post("/urls", (req, res) => {
 // Route to handle short URL redirection
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id];
-  if (!longURL) {
+  const url = urlDatabase[id];
+  if (!url) {
     return res.status(404).send("Short URL not found.");
   }
-  res.redirect(longURL);
+  res.redirect(url.longURL);
 });
 
 // Route to handle updating of a URL
 app.post("/urls/:id", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = req.params.id;
   const url = urlDatabase[shortURL];
 
@@ -197,7 +194,7 @@ app.post("/urls/:id", (req, res) => {
 
 // Route to handle deletion of a URL
 app.post("/urls/:id/delete", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = req.params.id;
   const url = urlDatabase[shortURL];
 
@@ -220,36 +217,35 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const user = getUserByEmail(email, users);
 
-  // Check if user exists and password matches
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("Email or password is incorrect");
   }
 
-  res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
   res.redirect("/urls");
 });
 
 // Route to handle user logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
 // Route to render the login form
 app.get("/login", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (user) {
-    return res.redirect("/urls"); // Redirect if user is logged in
+    return res.redirect("/urls");
   }
   const templateVars = { user };
   res.render("login", templateVars);
 });
 
-//  Route to render the registration form
+// Route to render the registration form
 app.get("/register", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (user) {
-    return res.redirect("/urls"); // Redirect if user is logged in
+    return res.redirect("/urls");
   }
   const templateVars = { user };
   res.render("register", templateVars);
