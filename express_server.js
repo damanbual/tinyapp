@@ -152,15 +152,22 @@ app.post("/urls/:id", (req, res) => {
 
 // Route to handle user login
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.cookie("user_id", username); // Updated to use user_id
+  const { email, password } = req.body;
+  const user = getUserByEmail(email, users);
+
+  // Check if user exists and password matches
+  if (!user || user.password !== password) {
+    return res.status(403).send("Email or password is incorrect");
+  }
+
+  res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
 
 // Route to handle user logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id"); // Updated to use user_id
-  res.redirect("/urls");
+  res.clearCookie("user_id");
+  res.redirect("/login");
 });
 
 //  Route to render the registration form
