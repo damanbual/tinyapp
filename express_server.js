@@ -2,7 +2,7 @@
 import express from "express";
 import cookieSession from "cookie-session";
 import bcrypt from "bcryptjs";
-import { getUserByEmail } from "./helpers/helpers.mjs"; // Updated path
+import { getUserByEmail } from "./helpers/helpers.js"; 
 
 const app = express();
 const PORT = 8080; // default port 8080

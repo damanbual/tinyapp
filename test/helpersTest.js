@@ -1,6 +1,6 @@
 
 import { assert } from 'chai';
-import { getUserByEmail } from '../helpers/helpers.mjs';
+import { getUserByEmail } from '../helpers/helpers.js';
 
 const testUsers = {
   "userRandomID": {
