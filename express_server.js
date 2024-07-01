@@ -100,6 +100,9 @@ app.get("/urls", (req, res) => {
 // Route to render the new URL submission form
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies["user_id"]];
+  if (!user) {
+    return res.redirect("/login"); // Redirect if user is not logged in
+  }
   const templateVars = { user };
   res.render("urls_new", templateVars);
 });
@@ -109,9 +112,12 @@ app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies["user_id"]];
   const id = req.params.id;
   const longURL = urlDatabase[id];
+  if (!longURL) {
+    return res.status(404).send("Short URL not found.");
+  }
   const templateVars = { 
-    id, 
-    longURL, 
+    id,
+    longURL,
     user
   };
   res.render("urls_show", templateVars);
@@ -119,6 +125,10 @@ app.get("/urls/:id", (req, res) => {
 
 // Route to handle form submission for creating a new shortened URL
 app.post("/urls", (req, res) => {
+  const user = users[req.cookies["user_id"]];
+  if (!user) {
+    return res.status(403).send("You must be logged in to create a short URL.");
+  }
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
@@ -128,11 +138,10 @@ app.post("/urls", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
-  if (longURL) {
-    res.redirect(longURL);
-  } else {
-    res.status(404).send('Short URL not found');
+  if (!longURL) {
+    return res.status(404).send("Short URL not found.");
   }
+  res.redirect(longURL);
 });
 
 // Route to handle deletion of a URL
@@ -170,18 +179,24 @@ app.post("/logout", (req, res) => {
   res.redirect("/login");
 });
 
-//  Route to render the registration form
-app.get("/register", (req, res) => {
-  const user = users[req.cookies["user_id"]];
-  const templateVars = { user };
-  res.render("register", templateVars);
-});
-
 // Route to render the login form
 app.get("/login", (req, res) => {
   const user = users[req.cookies["user_id"]];
+  if (user) {
+    return res.redirect("/urls"); // Redirect if user is logged in
+  }
   const templateVars = { user };
   res.render("login", templateVars);
+});
+
+//  Route to render the registration form
+app.get("/register", (req, res) => {
+  const user = users[req.cookies["user_id"]];
+  if (user) {
+    return res.redirect("/urls"); // Redirect if user is logged in
+  }
+  const templateVars = { user };
+  res.render("register", templateVars);
 });
 
 // Start the server
