@@ -9,4 +9,17 @@ const getUserByEmail = function(email, database) {
   return null;
 };
 
-export { getUserByEmail };
+// Function to get URLs for a specific user
+const urlsForUser = function(userId, urlDatabase) {
+  const userUrls = {};
+  for (const shortURL in urlDatabase) {
+    const urlData = urlDatabase[shortURL];
+    if (urlData.userID === userId) {
+      userUrls[shortURL] = urlData;
+    }
+  }
+  return userUrls;
+};
+
+// Exporting the functions
+export { getUserByEmail, urlsForUser };
