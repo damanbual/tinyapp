@@ -34,9 +34,31 @@ const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
 };
 
-// Route to handle user registration
+// Helper function to find user by email
+const getUserByEmail = (email, users) => {
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      return user;
+    }
+  }
+  return null;
+};
+
+//  Route to handle user registration
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
+  
+  // Check if email or password are empty
+  if (!email || !password) {
+    return res.status(400).send("Email and password cannot be empty");
+  }
+
+  // Check if email already exists
+  if (getUserByEmail(email, users)) {
+    return res.status(400).send("Email already exists");
+  }
+
   const userId = generateRandomString();
 
   users[userId] = {
@@ -46,6 +68,7 @@ app.post("/register", (req, res) => {
   };
 
   res.cookie("user_id", userId);
+  console.log(users); 
   res.redirect("/urls");
 });
 
@@ -69,7 +92,7 @@ app.get("/urls", (req, res) => {
   const user = users[req.cookies["user_id"]];
   const templateVars = { 
     urls: urlDatabase, 
-    user
+    user 
   };
   res.render("urls_index", templateVars);
 });
@@ -77,7 +100,7 @@ app.get("/urls", (req, res) => {
 // Route to render the new URL submission form
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies["user_id"]];
-  const templateVars = { user }; // Updated to pass user object
+  const templateVars = { user };
   res.render("urls_new", templateVars);
 });
 
@@ -130,20 +153,20 @@ app.post("/urls/:id", (req, res) => {
 // Route to handle user login
 app.post("/login", (req, res) => {
   const username = req.body.username;
-  res.cookie("user_id", username);
+  res.cookie("user_id", username); // Updated to use user_id
   res.redirect("/urls");
 });
 
 // Route to handle user logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  res.clearCookie("user_id"); // Updated to use user_id
   res.redirect("/urls");
 });
 
-// NEW: Route to render the registration form
+//  Route to render the registration form
 app.get("/register", (req, res) => {
   const user = users[req.cookies["user_id"]];
-  const templateVars = { user }; 
+  const templateVars = { user };
   res.render("register", templateVars);
 });
 
