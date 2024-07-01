@@ -170,6 +170,13 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
+// Route to render the login form
+app.get("/login", (req, res) => {
+  const user = users[req.cookies["user_id"]];
+  const templateVars = { user };
+  res.render("login", templateVars);
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
